@@ -9,6 +9,8 @@ export const metadata = {
   title: "Verify Credential — Simply Updify",
 };
 
+export const dynamic = "force-dynamic";
+
 interface VerifyPageProps {
   params: Promise<{
     id: string;
