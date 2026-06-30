@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
-export const dynamic = "force-dynamic";
 import {
   LayoutDashboard,
   ClipboardList,
