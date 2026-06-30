@@ -1,0 +1,47 @@
+========================================================================
+             SIMPLY UPDIFY INTERNSHIP PORTAL - DEMO CREDENTIALS
+========================================================================
+
+Shared Password for all accounts: password123
+
+------------------------------------------------------------------------
+1. ADMINISTRATOR PORTAL
+------------------------------------------------------------------------
+Role:       Admin
+Email:      admin@simplyupdify.app
+Password:   password123
+Features:   Onboard batches, create task tickets, issue credentials, 
+            publish bulletins, and review system audit logs.
+
+------------------------------------------------------------------------
+2. MENTOR / LEAD DEVELOPER PORTAL
+------------------------------------------------------------------------
+Role:       Mentor / Lead Developer
+Email:      mentor@simplyupdify.app
+Password:   password123
+Features:   Evaluate intern task submissions, assign scores (0-100), 
+            and review cohort competency models.
+
+------------------------------------------------------------------------
+3. INTERN WORKSPACE
+------------------------------------------------------------------------
+Role:       Intern
+Email:      intern@simplyupdify.app
+Password:   password123
+Features:   Clock in/out, submit task links (GitHub/Live), log daily 
+            standups, track XP, and download verified certificates.
+
+------------------------------------------------------------------------
+4. SUPER ADMINISTRATOR
+------------------------------------------------------------------------
+Role:       Super Admin
+Email:      superadmin@simplyupdify.app
+Password:   password123
+Features:   Access security audit logs, settings, and full system actions.
+
+========================================================================
+Additional Intern Accounts:
+- ravi@simplyupdify.app (password123)
+- priya.m@simplyupdify.app (password123)
+- sanjay@simplyupdify.app (password123)
+========================================================================

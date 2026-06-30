@@ -1,26 +1,157 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ─── Microsoft Fluent Design System 2 — Simply Updify Theme ───────────────── */
+
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Fluent 2 Brand Accent (Sapphire/Slate Blue) ── */
+  --primary: 218 85% 45%;
+  --primary-foreground: 0 0% 100%;
+  --primary-hover: 218 85% 38%;
+  --primary-subtle: 218 85% 95%;
+
+  /* ── Fluent 2 Neutral Layers (Light) ── */
+  --background: 0 0% 98%;           /* Neutral Background 1 (fafafa) */
+  --foreground: 0 0% 14%;           /* Neutral Foreground 1 (242424) */
+  
+  --card: 0 0% 100%;                /* Neutral Background 2 (ffffff) */
+  --card-foreground: 0 0% 14%;
+  
+  --popover: 0 0% 100%;             /* Popover Background */
+  --popover-foreground: 0 0% 14%;
+  
+  --muted: 0 0% 95%;                /* Neutral Background 3 (f2f2f2) */
+  --muted-foreground: 0 0% 38%;     /* Neutral Foreground 2 (616161) */
+  
+  --accent: 0 0% 95%;               /* Neutral Background 4 (eaeaea) */
+  --accent-foreground: 0 0% 14%;
+  
+  --border: 0 0% 88%;               /* Neutral Stroke 1 (e0e0e0) */
+  --input: 0 0% 88%;
+  --ring: 218 85% 45%;
+
+  /* ── Semantic Colors ── */
+  --success: 142 69% 36%;
+  --success-foreground: 0 0% 100%;
+  --warning: 35 90% 45%;
+  --warning-foreground: 0 0% 100%;
+  --destructive: 354 85% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --info: 200 85% 42%;
+  --info-foreground: 0 0% 100%;
+
+  /* ── Sidebar (Fluent Navigation Panel) ── */
+  --sidebar: 0 0% 96%;              /* Neutral Background 1.5 */
+  --sidebar-foreground: 0 0% 14%;
+  --sidebar-primary: 218 85% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 92%;
+  --sidebar-accent-foreground: 0 0% 14%;
+  --sidebar-border: 0 0% 88%;
+  --sidebar-ring: 218 85% 45%;
+
+  /* ── Radii (Fluent 2 Spec) ── */
+  --radius-xs: 2px;
+  --radius-sm: 4px;                 /* Control corner radius (Buttons, Inputs) */
+  --radius: 6px;                    /* Standard corner radius */
+  --radius-md: 8px;                 /* Container corner radius (Cards, Panels) */
+  --radius-lg: 12px;                /* Dialog corner radius */
+
+  /* ── Shadows (Fluent 2 Depth) ── */
+  --shadow-fluent: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 1px rgba(0, 0, 0, 0.1);
+  --shadow-fluent-elevated: 0 4px 8px rgba(0, 0, 0, 0.08), 0 0 2px rgba(0, 0, 0, 0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  /* ── Fluent 2 Neutral Layers (Dark) ── */
+  --background: 0 0% 12%;           /* Neutral Background 1 (1f1f1f) */
+  --foreground: 0 0% 100%;          /* Neutral Foreground 1 (ffffff) */
+  
+  --card: 0 0% 16%;                 /* Neutral Background 2 (292929) */
+  --card-foreground: 0 0% 100%;
+  
+  --popover: 0 0% 16%;
+  --popover-foreground: 0 0% 100%;
+  
+  --muted: 0 0% 20%;                /* Neutral Background 3 (333333) */
+  --muted-foreground: 0 0% 84%;     /* Neutral Foreground 2 (d6d6d6) */
+  
+  --accent: 0 0% 24%;               /* Neutral Background 4 (3d3d3d) */
+  --accent-foreground: 0 0% 100%;
+  
+  --border: 0 0% 24%;               /* Neutral Stroke 1 (3d3d3d) */
+  --input: 0 0% 24%;
+  --ring: 218 85% 45%;
+
+  --success: 142 69% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 35 90% 50%;
+  --warning-foreground: 0 0% 100%;
+  --destructive: 354 85% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --info: 200 85% 50%;
+  --info-foreground: 0 0% 100%;
+
+  --sidebar: 0 0% 10%;              /* Neutral Background 1.5 Dark */
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 218 85% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 16%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 16%;
+  --sidebar-ring: 218 85% 45%;
+
+  --shadow-fluent: 0 1px 2px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.3);
+  --shadow-fluent-elevated: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-[hsl(var(--border))];
+  }
+
+  body {
+    @apply bg-[hsl(var(--background))] text-[hsl(var(--foreground))] antialiased;
+    font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+
+  /* Fluent Focus Ring */
+  *:focus-visible {
+    @apply outline-2 outline-offset-1 outline-[hsl(var(--ring))];
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─── Fluent Card Layering & Elevation ─── */
+.fluent-card {
+  background-color: HSL(var(--card));
+  border: 1px solid HSL(var(--border));
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-fluent);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.fluent-card-hover:hover {
+  border-color: HSL(var(--muted-foreground) / 0.3);
+  box-shadow: var(--shadow-fluent-elevated);
+}
+
+.fluent-input {
+  border: 1px solid HSL(var(--border));
+  border-bottom: 2px solid HSL(var(--border));
+  border-radius: var(--radius-sm);
+  background-color: HSL(var(--card));
+  transition: border-color 0.1s ease;
+}
+
+.fluent-input:focus {
+  border-color: HSL(var(--ring));
+  border-bottom-color: HSL(var(--ring));
+  outline: none;
+}
+
+/* ─── High Contrast Borders for Accessibility ─── */
+.fluent-border-strong {
+  border-color: HSL(var(--muted-foreground) / 0.4);
 }

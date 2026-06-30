@@ -1,0 +1,318 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MENTOR
+  INTERN
+}
+
+enum TaskDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum TaskStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CertificateType {
+  COMPLETION
+  PARTICIPATION
+  EXCELLENCE
+  TOP_PERFORMER
+}
+
+enum InternshipDomain {
+  FRONTEND
+  BACKEND
+  FULLSTACK
+  UIUX
+  REACT_NATIVE
+  AI_ML
+  DIGITAL_MARKETING
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String    @unique
+  password      String?
+  role          UserRole  @default(INTERN)
+  image         String?
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  auditLogs     AuditLog[]
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Profile {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  phone     String?
+  bio       String?
+  education String?
+  college   String?
+  skills    String[]
+  github    String?
+  linkedin  String?
+  portfolio String?
+  resume    String?
+  city      String?
+  state     String?
+  country   String?
+  domain    InternshipDomain
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Batch {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String           @unique
+  domain      InternshipDomain
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  maxInterns  Int
+  isActive    Boolean          @default(true)
+  createdBy   String           @db.ObjectId
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Task {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  description    String
+  difficulty     TaskDifficulty
+  status         TaskStatus     @default(DRAFT)
+  priority       Priority       @default(MEDIUM)
+  xpReward       Int            @default(100)
+  deadline       DateTime
+  estimatedHours Int
+  batchId        String?        @db.ObjectId
+  createdBy      String         @db.ObjectId
+  attachments    String[]
+  resources      String[]
+  requiresGithub Boolean        @default(true)
+  requiresLiveDemo Boolean      @default(false)
+  isRecurring    Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+model Submission {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  taskId        String           @db.ObjectId
+  internId      String           @db.ObjectId
+  status        SubmissionStatus @default(SUBMITTED)
+  githubUrl     String?
+  liveUrl       String?
+  files         String[]
+  images         String[]
+  videoUrl      String?
+  notes         String?
+  score         Int?
+  reviewedBy    String?          @db.ObjectId
+  reviewedAt    DateTime?
+  reviewComment String?
+  isDraft       Boolean          @default(false)
+  submittedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model Attendance {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  internId      String           @db.ObjectId
+  date          DateTime
+  status        AttendanceStatus
+  checkInTime   DateTime?
+  checkOutTime  DateTime?
+  hoursWorked   Float?
+  notes         String?
+}
+
+model LeaveRequest {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  internId   String      @db.ObjectId
+  startDate  DateTime
+  endDate    DateTime
+  reason     String
+  status     LeaveStatus @default(PENDING)
+  approvedBy String?     @db.ObjectId
+  approvedAt DateTime?
+  createdAt  DateTime    @default(now())
+}
+
+model DailyReport {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  internId       String   @db.ObjectId
+  date           DateTime
+  todaysWork     String
+  hoursWorked    Float
+  challenges     String?
+  tomorrowGoals  String?
+  mentorFeedback String?
+  createdAt      DateTime @default(now())
+}
+
+model Certificate {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  certificateId String          @unique
+  internId      String          @db.ObjectId
+  type          CertificateType
+  internName    String
+  domain        InternshipDomain
+  batchName     String
+  issueDate     DateTime        @default(now())
+  expiryDate    DateTime?
+  qrCodeUrl     String?
+  pdfUrl        String?
+  isValid       Boolean         @default(true)
+}
+
+model Announcement {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  priority    Priority         @default(MEDIUM)
+  audience    String           @default("ALL") // ALL, BATCH, DOMAIN, INDIVIDUAL
+  batchId     String?          @db.ObjectId
+  domain      InternshipDomain?
+  attachments String[]
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  createdBy   String           @db.ObjectId
+  createdAt   DateTime         @default(now())
+}
+
+model Resource {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  type        String // PDF, VIDEO, ZIP, GOOGLE_DRIVE, FIGMA, GITHUB, EXTERNAL_URL
+  url         String
+  fileSize    Int?
+  batchId     String?          @db.ObjectId
+  domain      InternshipDomain?
+  createdBy   String           @db.ObjectId
+  createdAt   DateTime         @default(now())
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  type      String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model XPTransaction {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  internId  String   @db.ObjectId
+  amount    Int
+  reason    String
+  taskId    String?  @db.ObjectId
+  createdAt DateTime @default(now())
+}
+
+model Achievement {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  icon        String
+  xpRequired  Int?
+  criteria    String
+}
+
+model AuditLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  action     String
+  resource   String
+  resourceId String?
+  details    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

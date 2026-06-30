@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Simply Updify — Internship Management Platform (Full Stack)
 
-## Getting Started
+A premium, production-ready enterprise SaaS platform for managing interns, mentors, tasks, submissions, analytics, and certifications.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Frontend**: Next.js 15 (App Router), React 19, TypeScript, Tailwind CSS, shadcn/ui, Framer Motion
+- **Backend**: Next.js Server Actions + Route Handlers, Prisma ORM, MongoDB
+- **Authentication**: NextAuth.js v5 (Auth.js) with RBAC & Middleware Protection
+- **Email**: Resend (API-ready)
+- **Containerization**: Docker & Docker Compose
+
+---
+
+## 📦 Features (Phase 1)
+
+1. **Role-Based Access Control (RBAC)**:
+   - **Super Admin / Admin**: Full dashboard analytics, intern & mentor overview, task creation, announcements.
+   - **Mentor**: Manage assigned interns, review queue, performance radar chart.
+   - **Intern**: Personal progress radial tracker, current tasks list with progress bars, streak counters, leaderboard, announcements feed, and mentor feedback.
+2. **Interactive Landing Page**: Modern enterprise design featuring Hero, Feature cards, Domain list, Journey Timeline, Testimonials, FAQ Accordion, Contact Form, and Dark/Light Mode.
+3. **Multi-Step Application**: Beautiful register page with multi-step validation for personal info, education, and domain selection.
+4. **Global Search & UI**: Integrated Command Menu (Ctrl+K ready), responsive navigation, and loading skeletons.
+5. **Database Seeding**: Easily populate the MongoDB database with 25+ realistic mock users, tasks, and achievements.
+
+---
+
+## 🛠️ Setup Instructions
+
+### Prerequisites
+- Node.js 18+ and npm
+- MongoDB (Local instance or Atlas URL) OR Docker
+
+### 1. Environment Configuration
+Create a `.env.local` file in the root directory (based on `.env.example`):
+```env
+MONGODB_URI=mongodb://username:password@host:port/database
+MONGODB_DB=internship-platform
+AUTH_SECRET=your-32-byte-base64-secret-key
+AUTH_URL=http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run Database Seed
+To populate your MongoDB database with demo accounts, batches, tasks, and achievements:
+```bash
+# Ensure MongoDB is running first
+npx tsx scripts/seed.ts
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🔑 Demo Credentials
+All seeded accounts use the password: `password123`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Admin**: `admin@simplyupdify.app`
+- **Mentor**: `mentor@simplyupdify.app`
+- **Intern**: `intern@simplyupdify.app`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🐳 Docker Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To spin up the entire stack (Next.js app + MongoDB + Mongo Express UI) using Docker:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+docker-compose up --build
+```
+- Web Application: [http://localhost:3000](http://localhost:3000)
+- Mongo Express Dashboard: [http://localhost:8081](http://localhost:8081) (Login: `admin` / `password`)
+
+---
+
+## 📁 Architecture Overview
+```
+src/
+├── app/
+│   ├── (auth)/             # Login & Registration pages
+│   ├── (marketing)/        # Landing website (page.tsx)
+│   ├── dashboard/          # Admin, Mentor, and Intern portals
+│   └── api/                # Route Handlers (Auth, Register)
+├── components/
+│   ├── ui/                 # shadcn/ui primitives
+│   └── providers.tsx       # NextAuth & Theme Providers
+├── lib/
+│   ├── auth.ts             # NextAuth configuration
+│   ├── mongodb.ts          # MongoDB client connection
+│   ├── rbac.ts             # Role-Based Access Control logic
+│   └── utils.ts            # Core utility helpers
+├── scripts/
+│   └── seed.ts             # Database seeder
+└── types/
+    └── index.ts            # TypeScript interfaces & enums
+```
