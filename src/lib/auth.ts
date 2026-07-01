@@ -53,6 +53,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.deletedAt) return null;
         if (!user.isActive) return null;
 
+        // Check if maintenance mode is enabled
+        const settingsDoc = await db.collection(COLLECTIONS.SETTINGS).findOne({ key: "global_config" });
+        const isMaintenance = settingsDoc?.value?.maintenanceMode === true;
+        const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+        if (isMaintenance && !isAdmin) {
+          throw new Error("Portal is currently undergoing system maintenance. Please try again later.");
+        }
+
         const passwordMatch = await bcrypt.compare(
           credentials.password as string,
           user.password as string

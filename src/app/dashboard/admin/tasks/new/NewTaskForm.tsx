@@ -27,6 +27,7 @@ const taskSchema = z.object({
   xpReward: z.number().min(10, "XP Reward must be at least 10").max(1000, "XP Reward cannot exceed 1000"),
   deadline: z.string().min(1, "Please select a deadline date"),
   estimatedHours: z.number().min(1, "Estimated hours must be at least 1"),
+  domain: z.string().min(1, "Please specify a target domain classification"),
 });
 
 type TaskForm = z.infer<typeof taskSchema>;
@@ -46,6 +47,7 @@ export function NewTaskForm() {
       difficulty: "BEGINNER",
       xpReward: 100,
       estimatedHours: 8,
+      domain: "All Domains",
     },
   });
 
@@ -186,6 +188,21 @@ export function NewTaskForm() {
             <p className="mt-1 text-[10px] text-[hsl(var(--destructive))]">{errors.estimatedHours.message}</p>
           )}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="domain" className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
+          Target Domain Classification
+        </Label>
+        <Input
+          id="domain"
+          placeholder="e.g. Fullstack Development, UI/UX, or All Domains"
+          className="fluent-input h-8 text-xs mt-1"
+          {...register("domain")}
+        />
+        {errors.domain && (
+          <p className="mt-1 text-[10px] text-[hsl(var(--destructive))]">{errors.domain.message}</p>
+        )}
       </div>
 
       <Button

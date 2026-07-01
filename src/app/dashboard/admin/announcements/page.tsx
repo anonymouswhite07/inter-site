@@ -1,9 +1,9 @@
 import { getDb, COLLECTIONS } from "@/lib/mongodb";
-import { Megaphone, Calendar, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Megaphone, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { AnnouncementDialog } from "@/components/dashboard/AnnouncementDialog";
+import { DeleteAnnouncementButton } from "@/components/dashboard/DeleteAnnouncementButton";
 
 export const metadata = {
   title: "Announcements — Simply Updify",
@@ -51,9 +51,7 @@ export default async function AdminAnnouncementsPage() {
                   <span className="text-[10px] text-[hsl(var(--muted-foreground))] font-medium flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" /> {formatDate(ann.publishedAt)}
                   </span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <DeleteAnnouncementButton id={ann._id.toString()} />
                 </div>
               </div>
               <p className="text-[11px] text-[hsl(var(--muted-foreground))] leading-relaxed whitespace-pre-line">

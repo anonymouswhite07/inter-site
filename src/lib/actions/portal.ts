@@ -5,6 +5,9 @@ import { getDb, COLLECTIONS } from "@/lib/mongodb";
 import { auth } from "@/lib/auth";
 import { ObjectId } from "mongodb";
 import type { SubmissionStatus, AttendanceStatus } from "@/types";
+import bcrypt from "bcryptjs";
+import { sendWelcomeEmail } from "@/lib/email";
+import { headers } from "next/headers";
 
 /* ─── Helper: Get Current Authenticated User ─── */
 async function getSessionUser() {
@@ -13,6 +16,28 @@ async function getSessionUser() {
     throw new Error("Unauthorized");
   }
   return session.user;
+}
+
+export async function logAuditAction(action: string, resource: string) {
+  try {
+    const session = await auth();
+    if (!session?.user) return;
+    
+    const db = await getDb();
+    const reqHeaders = await headers();
+    const ipAddress = reqHeaders.get("x-forwarded-for") || "127.0.0.1";
+    
+    await db.collection(COLLECTIONS.AUDIT_LOGS).insertOne({
+      userId: session.user.id,
+      userName: session.user.name || session.user.email,
+      action,
+      resource,
+      ipAddress,
+      createdAt: new Date(),
+    });
+  } catch (err) {
+    console.error("Failed to log security audit record:", err);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -383,9 +408,234 @@ export async function createBatchAction(data: {
       updatedAt: now,
     });
 
+    await logAuditAction("CREATE_BATCH", `Batch: ${data.name} (${data.slug})`);
+
     revalidatePath("/dashboard/admin/batches");
     return { success: true, message: `Batch ${data.name} created successfully.` };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to create batch" };
   }
 }
+
+export async function createUserAction(data: {
+  name: string;
+  email: string;
+  role: "INTERN" | "MENTOR" | "ADMIN";
+  domain?: string;
+  mentorName?: string;
+  duration?: string;
+}) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    const now = new Date();
+
+    // Check if email already exists
+    const existing = await db.collection(COLLECTIONS.USERS).findOne({ 
+      email: data.email.toLowerCase() 
+    });
+    if (existing) {
+      return { success: false, error: "A user with this email address already exists." };
+    }
+
+    // Generate a temporary password (e.g. SU-XXXX)
+    const tempPassword = "SU-" + Math.floor(100000 + Math.random() * 900000);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    const newUser = {
+      name: data.name,
+      email: data.email.toLowerCase(),
+      password: hashedPassword,
+      role: data.role,
+      isActive: true,
+      image: null,
+      emailVerified: null,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    };
+
+    // Insert user
+    const result = await db.collection(COLLECTIONS.USERS).insertOne(newUser);
+    const newUserId = result.insertedId;
+
+    // Generate matching Profile collection records with specified onboarding parameters
+    const initialProfile = {
+      userId: newUserId,
+      domain: data.domain || "Fullstack Development",
+      mentorName: data.mentorName || "Arun Krishnan (Lead Mentor)",
+      duration: data.duration || "3 Months",
+      startDate: now,
+      endDate: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000), // default 90 days
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection("Profile").insertOne(initialProfile);
+    await db.collection("profiles").insertOne(initialProfile);
+
+    await logAuditAction("ONBOARD_USER", `User: ${data.name} (${data.email}) as ${data.role} [Track: ${data.domain || "Unassigned"}]`);
+
+    // Send credentials via Resend
+    const loginUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const emailResult = await sendWelcomeEmail({
+      to: data.email,
+      name: data.name,
+      role: data.role,
+      passwordText: tempPassword,
+      loginUrl,
+    });
+
+    revalidatePath("/dashboard/admin/interns");
+    revalidatePath("/dashboard/admin/mentors");
+    
+    let successMessage = `User ${data.name} created successfully.`;
+    if (emailResult.logged) {
+      successMessage += " (Creds printed to server log due to missing keys)";
+    } else if (!emailResult.success) {
+      successMessage += " (User created, but welcome email dispatch failed)";
+    } else {
+      successMessage += " Credentials sent to their email.";
+    }
+
+    return { success: true, message: successMessage };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to create user" };
+  }
+}
+
+export async function createResourceAction(data: {
+  title: string;
+  description: string;
+  type: "LINK" | "PDF" | "VIDEO";
+  url: string;
+  domain: string;
+}) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN" && caller.role !== "MENTOR") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    const now = new Date();
+
+    const newResource = {
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      url: data.url,
+      domain: data.domain,
+      uploadedBy: caller.id,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection(COLLECTIONS.RESOURCES).insertOne(newResource);
+    
+    await logAuditAction("POST_RESOURCE", `Resource: ${data.title} (${data.type})`);
+
+    revalidatePath("/dashboard/resources");
+    return { success: true, message: `Resource "${data.title}" posted successfully.` };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to post resource" };
+  }
+}
+
+export async function deleteAnnouncementAction(id: string) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    await db.collection(COLLECTIONS.ANNOUNCEMENTS).deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    await logAuditAction("DELETE_ANNOUNCEMENT", `Announcement ID: ${id}`);
+
+    revalidatePath("/dashboard/admin/announcements");
+    revalidatePath("/dashboard/intern"); // Trigger updates on intern dashboard
+    return { success: true, message: "Announcement deleted successfully." };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to delete announcement" };
+  }
+}
+
+export async function deleteResourceAction(id: string) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    await db.collection(COLLECTIONS.RESOURCES).deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    await logAuditAction("DELETE_RESOURCE", `Resource ID: ${id}`);
+
+    revalidatePath("/dashboard/resources");
+    return { success: true, message: "Resource deleted successfully." };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to delete resource" };
+  }
+}
+
+export async function getSettingsAction() {
+  try {
+    const db = await getDb();
+    const settingsDoc = await db.collection(COLLECTIONS.SETTINGS).findOne({ key: "global_config" });
+    if (settingsDoc) {
+      return { success: true, settings: settingsDoc.value };
+    }
+    // Default system settings
+    return {
+      success: true,
+      settings: {
+        appName: "Simply Updify",
+        allowedDomains: "*",
+        senderEmail: "onboarding@resend.dev",
+        maintenanceMode: false,
+      }
+    };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to load portal configuration" };
+  }
+}
+
+export async function saveSettingsAction(settings: {
+  appName: string;
+  allowedDomains: string;
+  senderEmail: string;
+  maintenanceMode: boolean;
+}) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    await db.collection(COLLECTIONS.SETTINGS).updateOne(
+      { key: "global_config" },
+      { $set: { value: settings, updatedAt: new Date() } },
+      { upsert: true }
+    );
+
+    await logAuditAction("UPDATE_SETTINGS", "System settings panel modified");
+
+    return { success: true, message: "Global settings updated successfully!" };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to save settings" };
+  }
+}
+
+

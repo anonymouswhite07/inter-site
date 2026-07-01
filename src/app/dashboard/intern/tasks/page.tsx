@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { getDb, COLLECTIONS } from "@/lib/mongodb";
 import { TaskListClient } from "./TaskListClient";
 import type { Task, Submission } from "@/types";
+import { ObjectId } from "mongodb";
 
 export const metadata = {
   title: "My Tasks — Simply Updify",
@@ -14,16 +15,19 @@ export default async function InternTasksPage() {
   const db = await getDb();
 
   // 1. Get the intern's profile to find their domain
-  const profile = await db.collection(COLLECTIONS.PROFILES).findOne({
-    userId: session.user.id,
-  });
+  const profile = (await db.collection("Profile").findOne({ userId: new ObjectId(session.user.id) })
+    || await db.collection("profiles").findOne({ userId: new ObjectId(session.user.id) })
+    || {}) as any;
+
+  const userDomain = profile.domain || "Fullstack Development";
 
   // 2. Fetch all tasks matching their domain (or general tasks)
   const tasksCursor = await db.collection(COLLECTIONS.TASKS).find({
     $or: [
-      { domain: profile?.domain },
+      { domain: userDomain },
+      { domain: "All Domains" },
       { domain: { $exists: false } },
-      { batchId: { $exists: true } } // Tasks assigned to batches
+      { domain: "" }
     ]
   }).sort({ deadline: 1 });
   

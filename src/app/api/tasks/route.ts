@@ -11,6 +11,7 @@ const taskSchema = z.object({
   xpReward: z.number().min(10).max(1000),
   deadline: z.string().min(1),
   estimatedHours: z.number().min(1),
+  domain: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { title, description, difficulty, xpReward, deadline, estimatedHours } = result.data;
+    const { title, description, difficulty, xpReward, deadline, estimatedHours, domain } = result.data;
     const db = await getDb();
     const now = new Date();
 
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
       xpReward,
       deadline: new Date(deadline),
       estimatedHours,
+      domain: domain || "All Domains",
       attachments: [],
       resources: [],
       requiresGithub: true,

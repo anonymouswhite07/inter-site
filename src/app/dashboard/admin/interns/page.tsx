@@ -2,7 +2,12 @@ import { getDb, COLLECTIONS } from "@/lib/mongodb";
 import { Users, Mail, Phone, MapPin, Shield, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
+import { UserProfileDialog } from "@/components/dashboard/UserProfileDialog";
+
+import Link from "next/link";
+import { UserPlus } from "lucide-react";
 
 export const metadata = {
   title: "Manage Interns — Simply Updify",
@@ -27,11 +32,19 @@ export default async function AdminInternsPage() {
 
   return (
     <div className="space-y-5 max-w-[1600px] mx-auto">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Intern Directory</h1>
-        <p className="text-xs text-[hsl(var(--muted-foreground))]">
-          Oversee all registered company interns, tracks, and contact records.
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Intern Directory</h1>
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">
+            Oversee all registered company interns, tracks, and contact records.
+          </p>
+        </div>
+        <Link href="/dashboard/admin/users/new">
+          <Button size="sm" className="h-7 px-2.5 text-[11px] rounded bg-[hsl(var(--primary))] text-white font-medium">
+            <UserPlus className="mr-1 h-3.5 w-3.5" />
+            Create User
+          </Button>
+        </Link>
       </div>
 
       <div className="fluent-card p-4">
@@ -44,6 +57,7 @@ export default async function AdminInternsPage() {
                 <th className="py-2 font-medium">Contact</th>
                 <th className="py-2 font-medium">College / University</th>
                 <th className="py-2 font-medium">Status</th>
+                <th className="py-2 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[hsl(var(--border))]">
@@ -81,6 +95,16 @@ export default async function AdminInternsPage() {
                       <Badge className="rounded-sm bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 text-[9px] h-4.5 px-1.5 font-medium">
                         Active
                       </Badge>
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <UserProfileDialog
+                        userId={intern._id.toString()}
+                        trigger={
+                          <Button variant="ghost" className="h-7 text-[10px] px-2.5 rounded text-[hsl(var(--primary))] font-semibold">
+                            Manage Profile
+                          </Button>
+                        }
+                      />
                     </td>
                   </tr>
                 );

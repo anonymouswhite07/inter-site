@@ -2,6 +2,9 @@ import { getDb, COLLECTIONS } from "@/lib/mongodb";
 import { BookOpen, ExternalLink, FileText, Video, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { auth } from "@/lib/auth";
+import { AddResourceDialog } from "@/components/dashboard/AddResourceDialog";
+import { DeleteResourceButton } from "@/components/dashboard/DeleteResourceButton";
 
 export const metadata = {
   title: "Resources — Simply Updify",
@@ -9,6 +12,10 @@ export const metadata = {
 
 export default async function ResourcesPage() {
   const db = await getDb();
+  const session = await auth();
+  const userRole = session?.user?.role;
+  const canPost = userRole === "ADMIN" || userRole === "SUPER_ADMIN" || userRole === "MENTOR";
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
   
   // Fetch all resources
   const resources = await db
@@ -29,11 +36,14 @@ export default async function ResourcesPage() {
 
   return (
     <div className="space-y-5 max-w-[1400px] mx-auto">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Knowledge Repositories</h1>
-        <p className="text-xs text-[hsl(var(--muted-foreground))]">
-          Access curated reading materials, architecture blueprints, and technical documentation.
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Knowledge Repositories</h1>
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">
+            Access curated reading materials, architecture blueprints, and technical documentation.
+          </p>
+        </div>
+        {canPost && <AddResourceDialog />}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -46,16 +56,19 @@ export default async function ResourcesPage() {
           resources.map((res) => (
             <div key={res._id.toString()} className="fluent-card p-4 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded bg-[hsl(var(--accent))]">
-                    {getIcon(res.type)}
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded bg-[hsl(var(--accent))] shrink-0">
+                      {getIcon(res.type)}
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-semibold leading-snug line-clamp-1">{res.title}</h3>
+                      <Badge variant="outline" className="rounded-sm text-[8px] h-3.5 px-1.5 mt-0.5 font-medium uppercase">
+                        {res.domain || "Shared"}
+                      </Badge>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-xs font-semibold">{res.title}</h3>
-                    <Badge variant="outline" className="rounded-sm text-[8px] h-3.5 px-1.5 mt-0.5 font-medium uppercase">
-                      {res.domain || "Shared"}
-                    </Badge>
-                  </div>
+                  {isAdmin && <DeleteResourceButton id={res._id.toString()} />}
                 </div>
                 <p className="text-[10px] text-[hsl(var(--muted-foreground))] leading-relaxed">
                   {res.description || "No description provided for this resource."}

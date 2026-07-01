@@ -32,6 +32,7 @@ import {
   Trophy,
   FileText,
   Shield,
+  ShieldAlert,
   User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getInitials } from "@/lib/utils";
 import type { UserRole } from "@/types";
+import { UserProfileDialog } from "@/components/dashboard/UserProfileDialog";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 
 /* ─── Navigation Config ───────────────────────────────────────────────────── */
 interface NavItem {
@@ -179,8 +189,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+
+  const [maintenanceLockout, setMaintenanceLockout] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    // Run verification of maintenance gateway status
+    fetch("/api/profile")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.isMaintenanceLockout) {
+          setMaintenanceLockout(true);
+        }
+      })
+      .catch((err) => console.error("Error checking maintenance:", err));
+  }, []);
 
   const userRole = (session?.user?.role || "INTERN") as UserRole;
   const userName = session?.user?.name || "User";
@@ -193,13 +219,55 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return { href, label };
   });
 
+  if (maintenanceLockout) {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-[hsl(var(--background))] p-6 text-center select-none">
+        <div className="max-w-[400px] fluent-card p-8 space-y-6 border border-red-200 dark:border-red-950/20 bg-red-500/5">
+          <div className="flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-red-600 text-white shadow-lg shadow-red-500/20 animate-bounce">
+              <ShieldAlert className="h-7 w-7" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-sm font-bold text-[hsl(var(--foreground))]">Workspace Maintenance</h2>
+            <p className="text-[11px] text-[hsl(var(--muted-foreground))] leading-relaxed">
+              Simply Updify is currently undergoing system modifications. All workspace features are temporarily offline.
+            </p>
+          </div>
+          <div className="pt-2 border-t text-[10px] text-[hsl(var(--muted-foreground))]">
+            Please contact your system administrator or try again shortly.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-[hsl(var(--background))]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[hsl(var(--primary))] border-t-transparent" />
-          <p className="text-xs text-[hsl(var(--muted-foreground))]">Loading environment...</p>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-[hsl(var(--background))] select-none">
+        <motion.div
+          animate={{
+            opacity: [0.4, 1, 0.4],
+            scale: [0.98, 1, 0.98],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="flex flex-col items-center gap-4"
+        >
+          {/* Branded SU Logo */}
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[hsl(var(--primary))] text-white shadow-lg shadow-[hsl(var(--primary)/0.2)]">
+            <GraduationCap className="h-7 w-7" />
+          </div>
+          <div className="text-center space-y-1">
+            <h3 className="text-xs font-semibold tracking-wide">Simply Updify</h3>
+            <p className="text-[9px] text-[hsl(var(--muted-foreground))] uppercase tracking-widest font-semibold">
+              Initializing Workspace
+            </p>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -306,10 +374,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative h-7 w-7 rounded">
-              <Bell className="h-3.5 w-3.5" />
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[hsl(var(--destructive))]" />
-            </Button>
+            <NotificationBell />
 
             <Separator orientation="vertical" className="h-4 mx-1" />
 
@@ -332,11 +397,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   User Space
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-xs rounded cursor-pointer">
+                <DropdownMenuItem onClick={() => setProfileOpen(true)} className="text-xs rounded cursor-pointer">
                   <User className="mr-2 h-3.5 w-3.5" />
                   My Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-xs rounded cursor-pointer">
+                <DropdownMenuItem onClick={() => setPreferencesOpen(true)} className="text-xs rounded cursor-pointer">
                   <Settings className="mr-2 h-3.5 w-3.5" />
                   Preferences
                 </DropdownMenuItem>
@@ -368,6 +433,87 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </AnimatePresence>
         </main>
       </div>
+
+      {/* ── Branded Detailed Profile Dialog ── */}
+      <UserProfileDialog userId={session?.user?.id || ""} open={profileOpen} onOpenChange={setProfileOpen} />
+
+      {/* ── Branded Preferences & Settings Dialog ── */}
+      <Dialog open={preferencesOpen} onOpenChange={setPreferencesOpen}>
+        <DialogContent className="sm:max-w-[420px] rounded border bg-[hsl(var(--card))]">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-semibold flex items-center gap-2">
+              <Settings className="h-4 w-4 text-[hsl(var(--primary))]" />
+              System Preferences
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-5 py-3">
+            {/* Theme Configuration */}
+            <div className="space-y-2">
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
+                System Appearance
+              </h5>
+              <div className="flex items-center justify-between p-3.5 rounded border bg-[hsl(var(--background))] text-xs">
+                <span>Toggle Theme Mode</span>
+                {mounted && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    className="h-7 text-[10px] px-2.5 rounded hover:bg-[hsl(var(--accent))]"
+                  >
+                    {theme === "dark" ? <Sun className="mr-1 h-3 w-3" /> : <Moon className="mr-1 h-3 w-3" />}
+                    {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Change Password Placeholder */}
+            <div className="space-y-2">
+              <h5 className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
+                Account Operations
+              </h5>
+              <div className="p-3.5 rounded border bg-[hsl(var(--background))] space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span>Edit profile details</span>
+                  <Button variant="ghost" className="h-7 text-[10px] px-2.5 rounded text-[hsl(var(--primary))] font-semibold">
+                    Configure
+                  </Button>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <span>Change Password</span>
+                  <Button variant="ghost" className="h-7 text-[10px] px-2.5 rounded text-[hsl(var(--primary))] font-semibold">
+                    Update
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Account Status */}
+            <div className="p-3 bg-[hsl(var(--muted))] border rounded flex items-center justify-between text-[11px] text-[hsl(var(--muted-foreground))]">
+              <span>Account Status</span>
+              <span className="flex items-center gap-1.5 font-semibold text-green-600 dark:text-green-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-600 dark:bg-green-400 animate-pulse" />
+                Active On Network
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-2 border-t">
+            <Button
+              onClick={() => setPreferencesOpen(false)}
+              className="h-8 rounded bg-[hsl(var(--primary))] text-white text-xs font-semibold px-4"
+            >
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Onboarding Interactive Tour Overlay ── */}
+      <OnboardingTour />
     </div>
   );
 }
