@@ -489,7 +489,14 @@ export async function createUserAction(data: {
     await logAuditAction("ONBOARD_USER", `User: ${data.name} (${data.email}) as ${data.role} [Track: ${data.domain || "Unassigned"}]`);
 
     // Send credentials via Resend
-    const loginUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    let loginUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!loginUrl && process.env.VERCEL_URL) {
+      loginUrl = `https://${process.env.VERCEL_URL}`;
+    }
+    if (!loginUrl) {
+      loginUrl = "http://localhost:3000";
+    }
+
     const emailResult = await sendWelcomeEmail({
       to: data.email,
       name: data.name,
