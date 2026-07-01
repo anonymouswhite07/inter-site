@@ -438,8 +438,16 @@ export async function createUserAction(data: {
     const existing = await db.collection(COLLECTIONS.USERS).findOne({ 
       email: data.email.toLowerCase() 
     });
+    
     if (existing) {
-      return { success: false, error: "A user with this email address already exists." };
+      if (existing.deletedAt) {
+        // Purge old soft-deleted records to permit onboarding a fresh profile
+        await db.collection(COLLECTIONS.USERS).deleteOne({ _id: existing._id });
+        await db.collection("Profile").deleteMany({ userId: existing._id });
+        await db.collection("profiles").deleteMany({ userId: existing._id });
+      } else {
+        return { success: false, error: "A user with this email address already exists." };
+      }
     }
 
     // Generate a temporary password (e.g. SU-XXXX)
