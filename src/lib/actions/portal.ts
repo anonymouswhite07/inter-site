@@ -638,4 +638,27 @@ export async function saveSettingsAction(settings: {
   }
 }
 
+export async function deleteUserAction(userId: string) {
+  try {
+    const caller = await getSessionUser();
+    if (caller.role !== "ADMIN" && caller.role !== "SUPER_ADMIN") {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const db = await getDb();
+    await db.collection(COLLECTIONS.USERS).updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { deletedAt: new Date(), isActive: false } }
+    );
+
+    await logAuditAction("DELETE_USER", `User ID: ${userId}`);
+
+    revalidatePath("/dashboard/admin/interns");
+    revalidatePath("/dashboard/admin/mentors");
+    return { success: true, message: "User deleted successfully." };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to delete user" };
+  }
+}
+
 

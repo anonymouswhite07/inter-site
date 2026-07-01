@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getInitials } from "@/lib/utils";
 import { UserProfileDialog } from "@/components/dashboard/UserProfileDialog";
+import { DeleteUserButton } from "@/components/dashboard/DeleteUserButton";
 
 import Link from "next/link";
 import { UserPlus } from "lucide-react";
@@ -19,7 +20,7 @@ export default async function AdminInternsPage() {
   // Fetch all interns
   const interns = await db
     .collection(COLLECTIONS.USERS)
-    .find({ role: "INTERN" })
+    .find({ role: "INTERN", deletedAt: null })
     .toArray();
 
   const userIds = interns.map((i) => i._id.toString());
@@ -96,7 +97,7 @@ export default async function AdminInternsPage() {
                         Active
                       </Badge>
                     </td>
-                    <td className="py-2.5 text-right">
+                    <td className="py-2.5 text-right flex items-center justify-end gap-1">
                       <UserProfileDialog
                         userId={intern._id.toString()}
                         trigger={
@@ -105,6 +106,7 @@ export default async function AdminInternsPage() {
                           </Button>
                         }
                       />
+                      <DeleteUserButton id={intern._id.toString()} userName={intern.name} />
                     </td>
                   </tr>
                 );

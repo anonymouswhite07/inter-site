@@ -16,6 +16,7 @@ We introduced the following new source files to support the requested features:
 *   **[AddResourceDialog.tsx](file:///j:/internship/src/components/dashboard/AddResourceDialog.tsx)**: Renders the modal used by Admins and Mentors to post reading materials.
 *   **[DeleteAnnouncementButton.tsx](file:///j:/internship/src/components/dashboard/DeleteAnnouncementButton.tsx)**: Client component allowing Admins to delete broadcast items.
 *   **[DeleteResourceButton.tsx](file:///j:/internship/src/components/dashboard/DeleteResourceButton.tsx)**: Client component allowing Admins to delete shared resource assets.
+*   **[DeleteUserButton.tsx](file:///j:/internship/src/components/dashboard/DeleteUserButton.tsx)**: Client component with safety checks allowing Admins to soft-delete user accounts.
 
 ### 2. API Route Handlers (`src/app/api/`)
 *   **[api/profile/route.ts](file:///j:/internship/src/app/api/profile/route.ts)**:
@@ -36,13 +37,15 @@ We introduced the following new source files to support the requested features:
 | **[package.json](file:///j:/internship/package.json)** | Added `framer-motion` and `resend` integrations to support interactive animations and credential emails. |
 | **[src/app/dashboard/layout.tsx](file:///j:/internship/src/app/dashboard/layout.tsx)** | Implemented the `<OnboardingTour />` overlay. Added a dynamic checks thread against `/api/profile` to render a styled lock overlay if Maintenance Mode is active. |
 | **[src/lib/auth.ts](file:///j:/internship/src/lib/auth.ts)** | Enforced credentials verification check blocking non-admin logins if Maintenance Mode is enabled. |
-| **[src/lib/actions/portal.ts](file:///j:/internship/src/lib/actions/portal.ts)** | Added `logAuditAction` to track operations in security logs, along with `deleteResourceAction`, `getSettingsAction`, and `saveSettingsAction` database hooks. |
+| **[src/lib/actions/portal.ts](file:///j:/internship/src/lib/actions/portal.ts)** | Added `logAuditAction` to track operations in security logs, along with `deleteResourceAction`, `getSettingsAction`, `saveSettingsAction`, and `deleteUserAction` database hooks. |
 | **[src/app/dashboard/admin/settings/page.tsx](file:///j:/internship/src/app/dashboard/admin/settings/page.tsx)** | Overhauled the static placeholder settings page, adding active configuration controls (App Name, Allowed Domains, Welcome Sender address, Maintenance Toggle). |
 | **[src/app/dashboard/admin/audit/page.tsx](file:///j:/internship/src/app/dashboard/admin/audit/page.tsx)** | Refactored placeholders to read security log operations, timestamps, actor accounts, and client IP addresses dynamically. |
 | **[src/app/dashboard/intern/profile/page.tsx](file:///j:/internship/src/app/dashboard/intern/profile/page.tsx)** | Combined the separate layout menus, routing interns to their unified profile dossier display. |
 | **[src/app/dashboard/intern/tasks/page.tsx](file:///j:/internship/src/app/dashboard/intern/tasks/page.tsx)** | Corrected tasks listing filters using active user profile matching to display only target domain track sprint tickets. |
 | **[src/app/dashboard/admin/tasks/new/NewTaskForm.tsx](file:///j:/internship/src/app/dashboard/admin/tasks/new/NewTaskForm.tsx)** | Appended the target domain classification selector when publishing tickets. |
 | **[src/app/api/tasks/route.ts](file:///j:/internship/src/app/api/tasks/route.ts)** | Parsed and saved target domain classification variables inside the MongoDB tasks database collection. |
+| **[src/app/dashboard/admin/interns/page.tsx](file:///j:/internship/src/app/dashboard/admin/interns/page.tsx)** | Added `DeleteUserButton` controls to interns directory list. Query filters out soft-deleted users. |
+| **[src/app/dashboard/admin/mentors/page.tsx](file:///j:/internship/src/app/dashboard/admin/mentors/page.tsx)** | Added actions column and `DeleteUserButton` to mentors directory list. Query filters out soft-deleted users. |
 
 ---
 

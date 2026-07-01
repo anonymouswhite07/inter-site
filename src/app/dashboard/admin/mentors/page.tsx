@@ -3,6 +3,7 @@ import { Mail, Shield, UserCheck } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { getInitials } from "@/lib/utils";
+import { DeleteUserButton } from "@/components/dashboard/DeleteUserButton";
 
 export const metadata = {
   title: "Manage Mentors — Simply Updify",
@@ -14,7 +15,7 @@ export default async function AdminMentorsPage() {
   // Fetch all mentors
   const mentors = await db
     .collection(COLLECTIONS.USERS)
-    .find({ role: "MENTOR" })
+    .find({ role: "MENTOR", deletedAt: null })
     .toArray();
 
   return (
@@ -35,6 +36,7 @@ export default async function AdminMentorsPage() {
                 <th className="py-2 font-medium">Email</th>
                 <th className="py-2 font-medium">Role</th>
                 <th className="py-2 font-medium">Status</th>
+                <th className="py-2 text-right font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[hsl(var(--border))]">
@@ -62,6 +64,9 @@ export default async function AdminMentorsPage() {
                     <Badge className="rounded-sm bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-400 text-[9px] h-4.5 px-1.5 font-medium">
                       Active
                     </Badge>
+                  </td>
+                  <td className="py-2.5 text-right">
+                    <DeleteUserButton id={mentor._id.toString()} userName={mentor.name} />
                   </td>
                 </tr>
               ))}
